@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GreenCity — Community Environmental Reporting Platform empowering citizens to report civic environmental issues and advance the UN Sustainable Development Goals (SDGs).">
+  <meta name="keywords" content="GreenCity, Environmental Reporting, SDG 11, Sustainable Cities, Waste Management, Civic Reporting, Community Action">
+  <title>{% block title %}GreenCity — Community Environmental Reporting Platform{% endblock %}</title>
+
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Custom Master Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="{{ url_for('index') }}" class="nav-brand" aria-label="GreenCity Home">
+        <div class="brand-icon">
+          <i class="fa-solid fa-leaf"></i>
+        </div>
+        <div class="brand-text">Green<span>City</span></div>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+          <li><a href="{{ url_for('view_reports') }}" class="nav-link {% if request.endpoint == 'view_reports' %}active{% endif %}">View Reports</a></li>
+          <li><a href="{{ url_for('report_issue') }}" class="nav-link {% if request.endpoint == 'report_issue' %}active{% endif %}">Report an Issue</a></li>
+          <li><a href="{{ url_for('index') }}#sdgs" class="nav-link">UN SDGs</a></li>
+          
+          {% if current_user %}
+            <li><a href="{{ url_for('resident_dashboard') }}" class="nav-link {% if request.endpoint == 'resident_dashboard' %}active{% endif %}">My Dashboard</a></li>
+            {% if current_user.role == 'admin' %}
+              <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" style="color:#0284c7;"><i class="fa-solid fa-shield-halved"></i> Admin Portal</a></li>
+            {% endif %}
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        {% if current_user %}
+          <div class="user-menu-pill">
+            <i class="fa-solid fa-circle-user"></i>
+            <span>{{ current_user.name.split(' ')[0] }}</span>
+            <span class="user-badge">{{ current_user.role }}</span>
+          </div>
+          <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm" title="Log out">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+          </a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm">Login</a>
+          <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Register</a>
+        {% endif %}
+
+        <button class="mobile-toggle" aria-label="Toggle navigation menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  <div class="container alerts-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <span>
+              {% if category == 'success' %}
+                <i class="fa-solid fa-circle-check" style="margin-right:8px;"></i>
+              {% elif category == 'danger' %}
+                <i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i>
+              {% elif category == 'warning' %}
+                <i class="fa-solid fa-circle-exclamation" style="margin-right:8px;"></i>
+              {% else %}
+                <i class="fa-solid fa-circle-info" style="margin-right:8px;"></i>
+              {% endif %}
+              {{ message }}
+            </span>
+            <button class="alert-close" aria-label="Dismiss alert">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content Block -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Report Details Modal (Global Component) -->
+  <div id="report-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <span id="modal-category" class="report-category-badge" style="position:static;display:inline-block;margin-bottom:6px;">Category</span>
+          <h3 id="modal-title" style="font-size:1.35rem;margin-top:4px;">Report Title</h3>
+        </div>
+        <button class="modal-close" onclick="closeReportModal()" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <img id="modal-photo" src="" alt="Report photo" class="modal-photo" style="display:none;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+          <span id="modal-status" class="status-badge pending">Pending</span>
+          <span style="font-size:0.85rem;color:#64748b;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i><span id="modal-date">Date</span></span>
+        </div>
+
+        <div style="background:#f8fafc;padding:1rem;border-radius:10px;margin-bottom:1.25rem;border:1px solid #e2e8f0;">
+          <p style="font-size:0.88rem;color:#334155;margin-bottom:0.4rem;">
+            <strong><i class="fa-solid fa-location-dot" style="color:#059669;margin-right:6px;"></i>Location:</strong> 
+            <span id="modal-address">Address</span>
+          </p>
+          <p style="font-size:0.88rem;color:#334155;">
+            <strong><i class="fa-solid fa-user" style="color:#059669;margin-right:6px;"></i>Reported By:</strong> 
+            <span id="modal-submitter">Citizen</span>
+          </p>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <h4 style="font-size:1rem;margin-bottom:0.5rem;color:#0f172a;">Description</h4>
+          <p id="modal-desc" style="color:#475569;font-size:0.95rem;line-height:1.6;">Full description...</p>
+        </div>
+
+        <div style="background:#ecfdf5;border:1px solid #a7f3d0;padding:1.1rem;border-radius:10px;">
+          <h4 style="font-size:0.9rem;text-transform:uppercase;letter-spacing:0.04em;color:#065f46;margin-bottom:0.4rem;">
+            <i class="fa-solid fa-building-columns" style="margin-right:6px;"></i>Civic Action & Official Notes
+          </h4>
+          <p id="modal-admin-notes" style="color:#064e3b;font-size:0.9rem;line-height:1.5;">Status feedback from city administrators.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+            <div class="brand-icon" style="width:36px;height:36px;font-size:1.1rem;">
+              <i class="fa-solid fa-leaf"></i>
+            </div>
+            <h3 style="margin:0;font-size:1.35rem;">Green<span>City</span></h3>
+          </div>
+          <p>
+            An open community environmental reporting and civic accountability platform advancing the United Nations Sustainable Development Goals. Empowering residents and municipal departments to co-create cleaner, greener, and more resilient urban spaces.
+          </p>
+          <div class="sdg-partnership-badge">
+            <i class="fa-solid fa-globe"></i>
+            <span>Aligned with UN SDGs 11, 12, 13, 14 & 15</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('index') }}">Home Overview</a></li>
+            <li><a href="{{ url_for('view_reports') }}">Public Reports Map</a></li>
+            <li><a href="{{ url_for('report_issue') }}">Submit New Report</a></li>
+            <li><a href="{{ url_for('index') }}#sdgs">SDG Commitments</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Reporting Categories</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('view_reports', category='Garbage dumping') }}">Garbage Dumping</a></li>
+            <li><a href="{{ url_for('view_reports', category='Water leakage and water wastage') }}">Water Leakage</a></li>
+            <li><a href="{{ url_for('view_reports', category='Air pollution') }}">Air Pollution</a></li>
+            <li><a href="{{ url_for('view_reports', category='Plastic waste') }}">Plastic Waste</a></li>
+            <li><a href="{{ url_for('view_reports', category='Tree cutting and damage to green spaces') }}">Tree Protection</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Civic Action</h4>
+          <p style="color:#94a3b8;font-size:0.88rem;margin-bottom:1rem;">
+            Report urgent municipal hazards or environmental crimes to your local emergency hotline.
+          </p>
+          <div style="background:rgba(255,255,255,0.05);padding:0.85rem;border-radius:8px;border:1px solid rgba(255,255,255,0.1);font-size:0.85rem;">
+            <div style="color:#a7f3d0;font-weight:700;margin-bottom:0.25rem;"><i class="fa-solid fa-phone" style="margin-right:6px;"></i>Civic Helpline</div>
+            <div style="color:#cbd5e1;">Toll-Free: 1-800-GREEN-CTY</div>
+            <div style="color:#94a3b8;font-size:0.8rem;margin-top:4px;">Available 24/7 for environmental reports</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; {{ now.year }} GreenCity Environmental Reporting Platform. Built for the UN SDGs.</div>
+        <div style="display:flex;gap:1.5rem;">
+          <a href="{{ url_for('login') }}?demo=resident" style="color:#a7f3d0;font-size:0.85rem;"><i class="fa-solid fa-user-check"></i> Demo Resident</a>
+          <a href="{{ url_for('login') }}?demo=admin" style="color:#a7f3d0;font-size:0.85rem;"><i class="fa-solid fa-shield-halved"></i> Demo Admin</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- App Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

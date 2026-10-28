@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Resident Dashboard — GreenCity{% endblock %}
+
+{% block content %}
+<!-- Dashboard Welcome Header -->
+<div class="dashboard-header">
+  <div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(255,255,255,0.15);padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.85rem;margin-bottom:0.75rem;">
+          <i class="fa-solid fa-leaf"></i> Resident Environmental Portal
+        </div>
+        <h1>Welcome back, {{ current_user.name }}!</h1>
+        <p>Track your submitted environmental reports, monitor city progress, and see your SDG contribution.</p>
+      </div>
+
+      <div>
+        <a href="{{ url_for('report_issue') }}" class="btn btn-secondary btn-lg" style="color:#064e3b;font-weight:700;">
+          <i class="fa-solid fa-camera"></i> Report New Issue
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <!-- Resident Metric Cards -->
+    <div class="stats-grid" style="margin-top:-2rem;margin-bottom:2.5rem;">
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <i class="fa-solid fa-folder-open"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.total }}</h3>
+          <p>My Total Reports</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.pending }}</h3>
+          <p>Pending Review</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon progress">
+          <i class="fa-solid fa-wrench"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.progress }}</h3>
+          <p>In Progress</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon resolved">
+          <i class="fa-solid fa-medal"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.impact_score }}</h3>
+          <p>SDG Eco-Points</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+      <div style="display:flex;gap:1rem;">
+        <a href="{{ url_for('resident_dashboard') }}" class="nav-link {% if not status_filter %}active{% endif %}" style="padding-bottom:0.75rem;">
+          All Submissions ({{ stats.total }})
+        </a>
+        <a href="{{ url_for('resident_dashboard', status='Pending') }}" class="nav-link {% if status_filter == 'Pending' %}active{% endif %}" style="padding-bottom:0.75rem;">
+          Pending ({{ stats.pending }})
+        </a>
+        <a href="{{ url_for('resident_dashboard', status='In Progress') }}" class="nav-link {% if status_filter == 'In Progress' %}active{% endif %}" style="padding-bottom:0.75rem;">
+          In Progress ({{ stats.progress }})
+        </a>
+        <a href="{{ url_for('resident_dashboard', status='Resolved') }}" class="nav-link {% if status_filter == 'Resolved' %}active{% endif %}" style="padding-bottom:0.75rem;">
+          Resolved ({{ stats.resolved }})
+        </a>
+      </div>
+
+      <span style="font-size:0.88rem;color:#64748b;">
+        <i class="fa-solid fa-circle-check" style="color:#059669;margin-right:4px;"></i> Live Status Tracker Active
+      </span>
+    </div>
+
+    <!-- User's Submitted Reports -->
+    {% if reports %}
+      <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        {% for rep in reports %}
+          <div style="background:#ffffff;border-radius:16px;border:1px solid #e2e8f0;box-shadow:var(--shadow-sm);padding:1.5rem;display:grid;grid-template-columns:180px 1fr;gap:1.75rem;align-items:start;">
+            
+            <!-- Left: Media Thumbnail -->
+            <div style="height:150px;border-radius:12px;overflow:hidden;background:#f1f5f9;position:relative;">
+              {% if rep.photo_filename %}
+                <img src="{{ url_for('static', filename='uploads/' + rep.photo_filename) }}" alt="{{ rep.title }}" style="width:100%;height:100%;object-fit:cover;">
+              {% else %}
+                <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#059669;background:#ecfdf5;">
+                  <i class="fa-solid fa-seedling" style="font-size:2rem;margin-bottom:6px;"></i>
+                  <span style="font-size:0.75rem;font-weight:700;">No Photo</span>
+                </div>
+              {% endif %}
+              <span class="report-category-badge" style="top:8px;left:8px;font-size:0.7rem;padding:0.25rem 0.5rem;">
+                {{ rep.category }}
+              </span>
+            </div>
+
+            <!-- Right: Details, Tracker & Feedback -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;">
+                <span class="status-badge {{ rep.status.lower().replace(' ', '-') }}">
+                  {% if rep.status == 'Resolved' %}
+                    <i class="fa-solid fa-circle-check"></i>
+                  {% elif rep.status == 'In Progress' %}
+                    <i class="fa-solid fa-wrench"></i>
+                  {% else %}
+                    <i class="fa-solid fa-hourglass-half"></i>
+                  {% endif %}
+                  {{ rep.status }}
+                </span>
+                <span style="font-size:0.85rem;color:#64748b;">
+                  Submitted on {{ rep.created_at[:10] }}
+                </span>
+              </div>
+
+              <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem;color:#0f172a;">
+                {{ rep.title }}
+              </h3>
+              <p style="font-size:0.9rem;color:#475569;margin-bottom:0.75rem;line-height:1.5;">
+                {{ rep.description }}
+              </p>
+
+              <div style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">
+                <i class="fa-solid fa-location-dot" style="color:#059669;margin-right:4px;"></i> {{ rep.address }}
+              </div>
+
+              <!-- Status Progression Indicator -->
+              <div style="background:#f8fafc;padding:0.85rem 1.25rem;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:1rem;">
+                <div class="status-tracker">
+                  <div class="tracker-step active">
+                    <span class="tracker-dot"></span>
+                    <span>1. Reported</span>
+                  </div>
+                  <div class="tracker-line {% if rep.status in ['In Progress', 'Resolved'] %}active{% endif %}"></div>
+                  <div class="tracker-step {% if rep.status in ['In Progress', 'Resolved'] %}active{% endif %}">
+                    <span class="tracker-dot"></span>
+                    <span>2. In Action</span>
+                  </div>
+                  <div class="tracker-line {% if rep.status == 'Resolved' %}active{% endif %}"></div>
+                  <div class="tracker-step {% if rep.status == 'Resolved' %}active{% endif %}">
+                    <span class="tracker-dot"></span>
+                    <span>3. Resolved</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- City Feedback Note -->
+              {% if rep.admin_notes %}
+                <div style="background:#ecfdf5;border-left:4px solid #10b981;padding:0.75rem 1rem;border-radius:0 8px 8px 0;font-size:0.88rem;">
+                  <strong style="color:#065f46;"><i class="fa-solid fa-building-columns" style="margin-right:6px;"></i>Municipal Feedback:</strong>
+                  <span style="color:#064e3b;margin-left:4px;">{{ rep.admin_notes }}</span>
+                </div>
+              {% endif %}
+
+              <div style="margin-top:1rem;display:flex;justify-content:flex-end;">
+                <button onclick="window.openReportModal({{ rep.id }})" class="btn btn-secondary btn-sm">
+                  <i class="fa-solid fa-up-right-from-square"></i> Full Report View
+                </button>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="background:#ffffff;border-radius:16px;border:1px solid #e2e8f0;padding:4rem 2rem;text-align:center;">
+        <div style="font-size:3rem;color:#a7f3d0;margin-bottom:1rem;">
+          <i class="fa-solid fa-seedling"></i>
+        </div>
+        <h3 style="font-size:1.35rem;margin-bottom:0.5rem;color:#0f172a;">No reports found in this view</h3>
+        <p style="color:#64748b;max-width:440px;margin:0 auto 1.5rem auto;">
+          Spot an environmental issue or hazard in your area? Submit a report now to mobilize civic cleanup and earn eco-points.
+        </p>
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Submit First Report
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

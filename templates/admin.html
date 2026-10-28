@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Environmental Operations Portal — GreenCity{% endblock %}
+
+{% block content %}
+<!-- Admin Portal Header -->
+<div class="dashboard-header" style="background: linear-gradient(135deg, #0f172a, #064e3b);">
+  <div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(2,132,199,0.25);border:1px solid #0284c7;color:#7dd3fc;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.85rem;margin-bottom:0.75rem;">
+          <i class="fa-solid fa-shield-halved"></i> Municipal Administrator Operations
+        </div>
+        <h1>Environmental Triage & Operations Dashboard</h1>
+        <p>Review citizen submissions, assign municipal response teams, and update case statuses.</p>
+      </div>
+
+      <div style="display:flex;gap:0.75rem;">
+        <a href="{{ url_for('view_reports') }}" class="btn btn-secondary" target="_blank">
+          <i class="fa-solid fa-external-link"></i> Public Map View
+        </a>
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> New Officer Report
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <!-- Operational KPI Metrics Cards -->
+    <div class="stats-grid" style="margin-top:-2rem;margin-bottom:2.5rem;grid-template-columns:repeat(5, 1fr);">
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <i class="fa-solid fa-folder-tree"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ metrics.total }}</h3>
+          <p>Total Reports</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ metrics.pending }}</h3>
+          <p>Pending Review</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon progress">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ metrics.progress }}</h3>
+          <p>Under Action</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon resolved">
+          <i class="fa-solid fa-check-double"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ metrics.resolved }}</h3>
+          <p>Resolved</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f0fdf4;color:#059669;">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ metrics.rate }}%</h3>
+          <p>Resolution Rate</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart.js Analytics Visualizations -->
+    <div class="chart-grid">
+      <!-- Chart 1: Categories Breakdown -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h3 style="font-size:1.15rem;margin-bottom:0.25rem;">Reports by Category</h3>
+            <p style="font-size:0.85rem;color:#64748b;">Distribution across environmental problem areas</p>
+          </div>
+          <span style="font-size:0.8rem;background:#ecfdf5;color:#059669;padding:0.25rem 0.6rem;border-radius:6px;font-weight:600;">Real-Time</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Status Breakdown -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h3 style="font-size:1.15rem;margin-bottom:0.25rem;">Reports by Status</h3>
+            <p style="font-size:0.85rem;color:#64748b;">Current triage and resolution breakdown</p>
+          </div>
+          <span style="font-size:0.8rem;background:#e0f2fe;color:#0284c7;padding:0.25rem 0.6rem;border-radius:6px;font-weight:600;">Chart.js</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 3: Activity Timeline -->
+    <div class="chart-card" style="margin-bottom:2.5rem;">
+      <div class="chart-card-header">
+        <div>
+          <h3 style="font-size:1.15rem;margin-bottom:0.25rem;">Citizen Activity Timeline</h3>
+          <p style="font-size:0.85rem;color:#64748b;">Volume of environmental complaints filed over time</p>
+        </div>
+      </div>
+      <div class="chart-container" style="height:220px;">
+        <canvas id="activityChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Management Table Toolbar -->
+    <div class="table-card">
+      <div class="table-header">
+        <div>
+          <h3 style="font-size:1.25rem;margin-bottom:0.25rem;">Civic Environmental Reports Database</h3>
+          <p style="font-size:0.85rem;color:#64748b;">Filter, inspect, and update statuses of community reports.</p>
+        </div>
+
+        <!-- Filter Form -->
+        <form method="GET" action="{{ url_for('admin_dashboard') }}" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+          <input type="text" name="q" class="form-control" style="width:200px;font-size:0.85rem;padding:0.4rem 0.75rem;" placeholder="Search report or citizen..." value="{{ search_query }}">
+
+          <select name="category" class="form-control" style="width:160px;font-size:0.85rem;padding:0.4rem 0.75rem;">
+            <option value="">All Categories</option>
+            {% for cat in valid_categories %}
+              <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+
+          <select name="status" class="form-control" style="width:130px;font-size:0.85rem;padding:0.4rem 0.75rem;">
+            <option value="">All Statuses</option>
+            <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+            <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+          </select>
+
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-filter"></i> Apply
+          </button>
+          {% if search_query or category_filter or status_filter %}
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm" title="Clear Filters">
+              <i class="fa-solid fa-rotate-left"></i>
+            </a>
+          {% endif %}
+        </form>
+      </div>
+
+      <!-- Data Table -->
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Photo</th>
+              <th>Issue Title & Category</th>
+              <th>Location</th>
+              <th>Reported By</th>
+              <th>Current Status</th>
+              <th>Municipal Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if reports %}
+              {% for rep in reports %}
+                <tr>
+                  <td style="font-weight:700;color:#64748b;">#{{ rep.id }}</td>
+                  <td>
+                    {% if rep.photo_filename %}
+                      <img src="{{ url_for('static', filename='uploads/' + rep.photo_filename) }}" alt="Thumbnail" class="table-thumb">
+                    {% else %}
+                      <div class="table-thumb" style="display:flex;align-items:center;justify-content:center;color:#059669;background:#ecfdf5;font-size:1.1rem;">
+                        <i class="fa-solid fa-seedling"></i>
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div style="font-weight:700;color:#0f172a;margin-bottom:3px;">{{ rep.title }}</div>
+                    <span class="sdg-target-pill" style="font-size:0.75rem;">{{ rep.category }}</span>
+                  </td>
+                  <td>
+                    <div style="font-size:0.85rem;color:#334155;"><i class="fa-solid fa-location-dot" style="color:#059669;margin-right:4px;"></i>{{ rep.address }}</div>
+                    {% if rep.latitude and rep.longitude %}
+                      <div style="font-size:0.75rem;color:#94a3b8;font-family:monospace;">{{ rep.latitude|round(4) }}, {{ rep.longitude|round(4) }}</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div style="font-weight:600;color:#334155;">{{ rep.submitter_name }}</div>
+                    <div style="font-size:0.75rem;color:#94a3b8;">{{ rep.created_at[:10] }}</div>
+                  </td>
+                  <td>
+                    <span class="status-badge {{ rep.status.lower().replace(' ', '-') }}">
+                      {{ rep.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <!-- Quick Status Edit Button -->
+                      <button onclick="openAdminEditModal({{ rep.id }}, '{{ rep.title|replace('\'', '\\\'') }}', '{{ rep.status }}', '{{ (rep.admin_notes or '')|replace('\'', '\\\'') }}')" class="btn btn-outline-primary btn-sm" title="Change Status and Add Notes">
+                        <i class="fa-solid fa-pen-to-square"></i> Status
+                      </button>
+
+                      <!-- Inspect Modal Button -->
+                      <button onclick="window.openReportModal({{ rep.id }})" class="btn btn-secondary btn-sm" title="View Full Citizen Submission">
+                        <i class="fa-solid fa-eye"></i>
+                      </button>
+
+                      <!-- Delete Form -->
+                      <form method="POST" action="{{ url_for('admin_delete_report', report_id=rep.id) }}" onsubmit="return confirm('Permanently delete Report #{{ rep.id }}?');" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" style="padding:0.4rem 0.6rem;" title="Delete Report">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="7" style="text-align:center;padding:3rem;color:#64748b;">
+                  No environmental reports found matching the criteria.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Admin Edit Status & Feedback Modal -->
+<div id="admin-edit-modal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-dialog" style="max-width:540px;">
+    <div class="modal-header">
+      <div>
+        <h3 style="font-size:1.25rem;">Update Report Status #<span id="edit-report-id"></span></h3>
+        <p id="edit-report-title" style="font-size:0.88rem;color:#64748b;margin-top:2px;"></p>
+      </div>
+      <button class="modal-close" onclick="closeAdminEditModal()" aria-label="Close modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="admin-status-form" method="POST" action="">
+        <!-- Status Selector -->
+        <div class="form-group">
+          <label for="edit-status-select" class="form-label">Update Status</label>
+          <select id="edit-status-select" name="status" class="form-control" required>
+            <option value="Pending">Pending (Under Assessment)</option>
+            <option value="In Progress">In Progress (Municipal Crew Assigned)</option>
+            <option value="Resolved">Resolved (Sanitation/Repairs Complete)</option>
+          </select>
+        </div>
+
+        <!-- Municipal Action Notes -->
+        <div class="form-group">
+          <label for="edit-admin-notes" class="form-label">Official Feedback & Action Notes</label>
+          <textarea id="edit-admin-notes" name="admin_notes" class="form-control" rows="4" placeholder="Enter notes on field team dispatch, permit citations, or resolution verification..."></textarea>
+          <small style="color:#64748b;font-size:0.8rem;">These notes will be publicly visible to the reporting resident and community.</small>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeAdminEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-check"></i> Save Status Update
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

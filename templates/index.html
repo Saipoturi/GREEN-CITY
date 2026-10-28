@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+
+{% block title %}GreenCity — Community Environmental Reporting & SDG Action{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container hero-grid">
+    <div class="hero-content">
+      <div class="sdg-badge-pill">
+        <i class="fa-solid fa-leaf"></i>
+        <span>United Nations SDGs in Local Action</span>
+      </div>
+      <h1 class="hero-title">
+        Empowering Citizens for a <span>Cleaner, Greener</span> City
+      </h1>
+      <p class="hero-lead">
+        Report environmental hazards, curb civic pollution, and collaborate directly with municipal services. Real-time community reporting driving measurable urban sustainability.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-camera"></i> Report an Issue
+        </a>
+        <a href="{{ url_for('view_reports') }}" class="btn btn-secondary btn-lg">
+          <i class="fa-solid fa-map-location-dot"></i> Explore Public Map
+        </a>
+      </div>
+
+      <div class="hero-stats-preview">
+        <div class="hero-stat-item">
+          <h4>{{ stats.total }}</h4>
+          <p>Verified Reports</p>
+        </div>
+        <div class="hero-stat-item">
+          <h4 style="color:#059669;">{{ stats.resolved }}</h4>
+          <p>Problems Solved</p>
+        </div>
+        <div class="hero-stat-item">
+          <h4 style="color:#0284c7;">{{ stats.resolution_rate }}%</h4>
+          <p>Resolution Rate</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Interactive Preview Card -->
+    <div class="hero-card-stack">
+      <div class="hero-feature-card">
+        <div class="feature-card-header">
+          <div>
+            <span class="report-category-badge" style="position:static;display:inline-block;">Garbage dumping</span>
+          </div>
+          <div class="live-pulse">
+            <span class="pulse-dot"></span>
+            <span>Live Action</span>
+          </div>
+        </div>
+
+        <div class="hero-preview-image">
+          <img src="{{ url_for('static', filename='uploads/sample_garbage.jpg') }}" alt="Environmental report showcase">
+        </div>
+
+        <h3 style="font-size:1.15rem;margin-bottom:0.5rem;color:#0f172a;">Overflowing municipal waste bins on Elmwood Ave</h3>
+        <p style="font-size:0.88rem;color:#64748b;margin-bottom:1rem;">
+          <i class="fa-solid fa-location-dot" style="color:#059669;margin-right:4px;"></i> 742 Elmwood Ave, Green District
+        </p>
+
+        <div class="hero-mini-stats">
+          <div class="mini-stat">
+            <strong>{{ stats.pending }}</strong>
+            <span>Pending</span>
+          </div>
+          <div class="mini-stat">
+            <strong style="color:#0284c7;">{{ stats.progress }}</strong>
+            <span>In Progress</span>
+          </div>
+          <div class="mini-stat">
+            <strong style="color:#10b981;">{{ stats.resolved }}</strong>
+            <span>Resolved</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Statistics Summary Section -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.total }}</h3>
+          <p>Total Citizen Reports</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.pending }}</h3>
+          <p>Under Assessment</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon progress">
+          <i class="fa-solid fa-wrench"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.progress }}</h3>
+          <p>Municipal Action In Progress</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon resolved">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.resolved }}</h3>
+          <p>Cleaned & Resolved</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- United Nations Sustainable Development Goals (SDGs) Section -->
+<section id="sdgs" class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Global Sustainability Agenda</span>
+      <h2 class="section-title">Advancing the UN Sustainable Development Goals</h2>
+      <p class="section-subtitle">
+        Every environmental issue reported on GreenCity maps directly to the United Nations 2030 Agenda for Sustainable Development, transforming neighborhood reports into global impact.
+      </p>
+    </div>
+
+    <div class="sdg-grid">
+      <!-- SDG 11 -->
+      <div class="sdg-card sdg-11">
+        <div class="sdg-number">
+          <span>GOAL 11</span>
+          <i class="fa-solid fa-city sdg-icon"></i>
+        </div>
+        <h3 class="sdg-title">Sustainable Cities & Communities</h3>
+        <p class="sdg-desc">
+          Make cities inclusive, safe, resilient, and sustainable by reducing municipal waste burdens and enhancing green urban infrastructure.
+        </p>
+        <div class="sdg-target-pill">Target 11.6: Air Quality & Waste</div>
+      </div>
+
+      <!-- SDG 12 -->
+      <div class="sdg-card sdg-12">
+        <div class="sdg-number">
+          <span>GOAL 12</span>
+          <i class="fa-solid fa-recycle sdg-icon"></i>
+        </div>
+        <h3 class="sdg-title">Responsible Consumption & Production</h3>
+        <p class="sdg-desc">
+          Halting plastic contamination, managing hazardous discarded debris, and fostering circular recycling habits across neighborhoods.
+        </p>
+        <div class="sdg-target-pill">Target 12.5: Substantially Reduce Waste</div>
+      </div>
+
+      <!-- SDG 13 -->
+      <div class="sdg-card sdg-13">
+        <div class="sdg-number">
+          <span>GOAL 13</span>
+          <i class="fa-solid fa-cloud-sun sdg-icon"></i>
+        </div>
+        <h3 class="sdg-title">Climate Action</h3>
+        <p class="sdg-desc">
+          Mitigating toxic localized emissions, industrial smoke violations, and urban greenhouse gases through transparent civic air monitoring.
+        </p>
+        <div class="sdg-target-pill">Target 13.3: Environmental Education</div>
+      </div>
+
+      <!-- SDG 14 -->
+      <div class="sdg-card sdg-14">
+        <div class="sdg-number">
+          <span>GOAL 14</span>
+          <i class="fa-solid fa-water sdg-icon"></i>
+        </div>
+        <h3 class="sdg-title">Life Below Water</h3>
+        <p class="sdg-desc">
+          Preventing micro-plastics, sewage runoff, and chemical pollution from entering urban lakes, rivers, and coastal waterways.
+        </p>
+        <div class="sdg-target-pill">Target 14.1: Reduce Marine Litter</div>
+      </div>
+
+      <!-- SDG 15 -->
+      <div class="sdg-card sdg-15">
+        <div class="sdg-number">
+          <span>GOAL 15</span>
+          <i class="fa-solid fa-tree sdg-icon"></i>
+        </div>
+        <h3 class="sdg-title">Life on Land</h3>
+        <p class="sdg-desc">
+          Protecting urban canopies, stopping unauthorized tree felling, and maintaining public parks to preserve community biodiversity.
+        </p>
+        <div class="sdg-target-pill">Target 15.2: Halt Deforestation</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Environmental Reporting Categories -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Civic Categories</span>
+      <h2 class="section-title">What You Can Report</h2>
+      <p class="section-subtitle">
+        Help preserve our community environment by flagging any of these critical civic issues for immediate municipal attention.
+      </p>
+    </div>
+
+    <div class="category-grid">
+      <!-- Category 1 -->
+      <div class="category-card cat-garbage">
+        <div class="category-icon-box">
+          <i class="fa-solid fa-trash-can"></i>
+        </div>
+        <h3>Garbage Dumping</h3>
+        <p>Overflowing bins, illegal fly-tipping, construction debris, and unattended commercial refuse on pedestrian curbs.</p>
+        <div class="category-meta-row">
+          <span class="category-count">{{ cat_counts.get('Garbage dumping', 0) }} Active Cases</span>
+          <a href="{{ url_for('report_issue') }}" class="btn btn-outline-primary btn-sm">Report</a>
+        </div>
+      </div>
+
+      <!-- Category 2 -->
+      <div class="category-card cat-water">
+        <div class="category-icon-box">
+          <i class="fa-solid fa-faucet-drip"></i>
+        </div>
+        <h3>Water Leakage</h3>
+        <p>Broken municipal supply mains, burst pipes, overflowing public tanks, and severe potable water wastage.</p>
+        <div class="category-meta-row">
+          <span class="category-count">{{ cat_counts.get('Water leakage and water wastage', 0) }} Active Cases</span>
+          <a href="{{ url_for('report_issue') }}" class="btn btn-outline-primary btn-sm">Report</a>
+        </div>
+      </div>
+
+      <!-- Category 3 -->
+      <div class="category-card cat-air">
+        <div class="category-icon-box">
+          <i class="fa-solid fa-smog"></i>
+        </div>
+        <h3>Air Pollution</h3>
+        <p>Toxic industrial chimneys, burning of municipal plastics, vehicle fleet soot, and heavy localized smoke hazards.</p>
+        <div class="category-meta-row">
+          <span class="category-count">{{ cat_counts.get('Air pollution', 0) }} Active Cases</span>
+          <a href="{{ url_for('report_issue') }}" class="btn btn-outline-primary btn-sm">Report</a>
+        </div>
+      </div>
+
+      <!-- Category 4 -->
+      <div class="category-card cat-plastic">
+        <div class="category-icon-box">
+          <i class="fa-solid fa-recycle"></i>
+        </div>
+        <h3>Plastic Waste</h3>
+        <p>Accumulated single-use plastic bottles, styrofoam packaging, and plastic trash choking drains and park wetlands.</p>
+        <div class="category-meta-row">
+          <span class="category-count">{{ cat_counts.get('Plastic waste', 0) }} Active Cases</span>
+          <a href="{{ url_for('report_issue') }}" class="btn btn-outline-primary btn-sm">Report</a>
+        </div>
+      </div>
+
+      <!-- Category 5 -->
+      <div class="category-card cat-trees">
+        <div class="category-icon-box">
+          <i class="fa-solid fa-tree"></i>
+        </div>
+        <h3>Tree Cutting & Damage</h3>
+        <p>Unauthorized felling of mature public trees, vandalized community park saplings, or dangerous severed branches.</p>
+        <div class="category-meta-row">
+          <span class="category-count">{{ cat_counts.get('Tree cutting and damage to green spaces', 0) }} Active Cases</span>
+          <a href="{{ url_for('report_issue') }}" class="btn btn-outline-primary btn-sm">Report</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Recent Community Reports Showcase -->
+<section class="section section-alt">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2.5rem;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <span class="section-tag">Verified Submissions</span>
+        <h2 class="section-title" style="margin-bottom:0.25rem;">Recent Community Reports</h2>
+        <p class="section-subtitle">Latest neighborhood issues submitted by active civic residents.</p>
+      </div>
+      <a href="{{ url_for('view_reports') }}" class="btn btn-primary">
+        <i class="fa-solid fa-list-check"></i> View All {{ stats.total }} Reports
+      </a>
+    </div>
+
+    <div class="reports-grid">
+      {% for rep in recent_reports %}
+        <div class="report-card">
+          <div class="report-card-media">
+            {% if rep.photo_filename %}
+              <img src="{{ url_for('static', filename='uploads/' + rep.photo_filename) }}" alt="{{ rep.title }}">
+            {% else %}
+              <div class="report-card-fallback">
+                <i class="fa-solid fa-seedling"></i>
+                <span>{{ rep.category }}</span>
+              </div>
+            {% endif %}
+            <span class="report-category-badge">{{ rep.category }}</span>
+          </div>
+
+          <div class="report-card-body">
+            <div class="report-card-header">
+              <span class="status-badge {{ rep.status.lower().replace(' ', '-') }}">
+                {% if rep.status == 'Resolved' %}
+                  <i class="fa-solid fa-check"></i>
+                {% elif rep.status == 'In Progress' %}
+                  <i class="fa-solid fa-wrench"></i>
+                {% else %}
+                  <i class="fa-solid fa-hourglass-half"></i>
+                {% endif %}
+                {{ rep.status }}
+              </span>
+              <span style="font-size:0.8rem;color:#64748b;">
+                <i class="fa-regular fa-calendar" style="margin-right:4px;"></i>{{ rep.created_at[:10] }}
+              </span>
+            </div>
+
+            <h3 class="report-card-title">{{ rep.title }}</h3>
+            <p class="report-card-desc">{{ rep.description }}</p>
+
+            <div class="report-card-meta">
+              <div class="report-meta-item">
+                <i class="fa-solid fa-location-dot" style="color:#059669;"></i>
+                <span>{{ rep.address }}</span>
+              </div>
+              <div class="report-meta-item">
+                <i class="fa-solid fa-user" style="color:#059669;"></i>
+                <span>Reported by {{ rep.submitter_name }}</span>
+              </div>
+            </div>
+
+            <div class="report-card-actions">
+              <button onclick="window.openReportModal({{ rep.id }})" class="btn btn-outline-primary btn-sm" style="width:100%;">
+                <i class="fa-solid fa-circle-info"></i> View Details & Status Notes
+              </button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Civic Process</span>
+      <h2 class="section-title">How GreenCity Works</h2>
+      <p class="section-subtitle">
+        A seamless 3-step transparent pathway turning citizen observations into verified civic solutions.
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:2rem;">
+      <div style="background:#ffffff;padding:2.5rem 2rem;border-radius:16px;border:1px solid #e2e8f0;box-shadow:var(--shadow-sm);text-align:center;">
+        <div style="width:64px;height:64px;background:#ecfdf5;color:#059669;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.75rem;margin:0 auto 1.5rem auto;font-weight:800;">
+          1
+        </div>
+        <h3 style="font-size:1.25rem;margin-bottom:0.75rem;">Spot & Document</h3>
+        <p style="color:#64748b;font-size:0.92rem;line-height:1.6;">
+          Take a photo of any environmental hazard, select the category, and drop an exact pin on our interactive city map.
+        </p>
+      </div>
+
+      <div style="background:#ffffff;padding:2.5rem 2rem;border-radius:16px;border:1px solid #e2e8f0;box-shadow:var(--shadow-sm);text-align:center;">
+        <div style="width:64px;height:64px;background:#e0f2fe;color:#0284c7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.75rem;margin:0 auto 1.5rem auto;font-weight:800;">
+          2
+        </div>
+        <h3 style="font-size:1.25rem;margin-bottom:0.75rem;">City Triage & Action</h3>
+        <p style="color:#64748b;font-size:0.92rem;line-height:1.6;">
+          Authorized municipal inspectors review the report, assign response teams, and update the status in real time to "In Progress".
+        </p>
+      </div>
+
+      <div style="background:#ffffff;padding:2.5rem 2rem;border-radius:16px;border:1px solid #e2e8f0;box-shadow:var(--shadow-sm);text-align:center;">
+        <div style="width:64px;height:64px;background:#dcfce7;color:#15803d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.75rem;margin:0 auto 1.5rem auto;font-weight:800;">
+          3
+        </div>
+        <h3 style="font-size:1.25rem;margin-bottom:0.75rem;">Verified Resolution</h3>
+        <p style="color:#64748b;font-size:0.92rem;line-height:1.6;">
+          The issue is resolved with public notes and metrics logged, contributing directly to your community's UN SDG impact score.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call-to-Action Banner -->
+<section style="background:linear-gradient(135deg, #064e3b, #059669);color:#ffffff;padding:4.5rem 0;text-align:center;">
+  <div class="container" style="max-width:760px;">
+    <h2 style="color:#ffffff;font-size:2.5rem;font-weight:800;margin-bottom:1rem;">Ready to make a difference in your neighborhood?</h2>
+    <p style="color:#d1fae5;font-size:1.1rem;margin-bottom:2rem;line-height:1.6;">
+      Join thousands of proactive citizens helping our municipality detect and fix environmental issues faster than ever before.
+    </p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('report_issue') }}" class="btn btn-secondary btn-lg" style="color:#064e3b;font-weight:700;">
+        <i class="fa-solid fa-camera"></i> Report an Environmental Issue
+      </a>
+      {% if not current_user %}
+        <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg" style="color:#ffffff;border-color:#ffffff;">
+          <i class="fa-solid fa-user-plus"></i> Create Free Account
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

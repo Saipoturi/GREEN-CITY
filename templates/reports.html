@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}View Environmental Reports — GreenCity{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:2.5rem;">
+  <div class="container">
+    <!-- Page Header -->
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1.5rem;">
+      <div>
+        <span class="section-tag"><i class="fa-solid fa-map-location-dot" style="margin-right:6px;"></i>Public Transparency</span>
+        <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:0.5rem;">Community Environmental Reports</h1>
+        <p style="color:#64748b;font-size:1.05rem;">
+          Explore geo-tagged environmental reports across the municipality. Filter by category, status, or search keywords.
+        </p>
+      </div>
+
+      <div>
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-plus"></i> Submit New Report
+        </a>
+      </div>
+    </div>
+
+    <!-- Leaflet Public Reports Map -->
+    <div class="map-wrapper">
+      <div class="map-header">
+        <div style="font-weight:700;color:#0f172a;display:flex;align-items:center;gap:0.5rem;">
+          <i class="fa-solid fa-earth-americas" style="color:#059669;"></i>
+          <span>Live Municipal Geolocation Map</span>
+        </div>
+        <div class="map-legend">
+          <div class="legend-item">
+            <span class="legend-dot pending"></span>
+            <span>Pending ({{ status_counts.get('Pending', 0) }})</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot progress"></span>
+            <span>In Progress ({{ status_counts.get('In Progress', 0) }})</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot resolved"></span>
+            <span>Resolved ({{ status_counts.get('Resolved', 0) }})</span>
+          </div>
+        </div>
+      </div>
+      <div id="reports-map"></div>
+    </div>
+
+    <!-- Search & Filter Toolbar -->
+    <div class="toolbar-card">
+      <form method="GET" action="{{ url_for('view_reports') }}" class="filter-form">
+        <!-- Search Keyword -->
+        <div style="position:relative;">
+          <input type="text" name="q" class="form-control" placeholder="Search by title, description, or street..." value="{{ search_query }}">
+        </div>
+
+        <!-- Category Dropdown -->
+        <div>
+          <select name="category" class="form-control">
+            <option value="">All Categories</option>
+            {% for cat in valid_categories %}
+              <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>
+                {{ cat }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Status Dropdown -->
+        <div>
+          <select name="status" class="form-control">
+            <option value="">All Statuses</option>
+            <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+            <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+          </select>
+        </div>
+
+        <!-- Sort Order -->
+        <div>
+          <select name="sort" class="form-control">
+            <option value="newest" {% if sort_order == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="oldest" {% if sort_order == 'oldest' %}selected{% endif %}>Oldest First</option>
+          </select>
+        </div>
+
+        <!-- Submit & Reset Buttons -->
+        <div style="display:flex;gap:0.5rem;">
+          <button type="submit" class="btn btn-primary" title="Apply Filters">
+            <i class="fa-solid fa-filter"></i> Filter
+          </button>
+          {% if search_query or category_filter or status_filter or sort_order != 'newest' %}
+            <a href="{{ url_for('view_reports') }}" class="btn btn-secondary" title="Reset Filters">
+              <i class="fa-solid fa-rotate-left"></i>
+            </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+
+    <!-- Active Filter Summary -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;font-size:0.95rem;color:#64748b;">
+      <div>
+        Showing <strong>{{ reports|length }}</strong> of <strong>{{ total_count }}</strong> total reports
+        {% if category_filter %} in <span class="sdg-target-pill">{{ category_filter }}</span>{% endif %}
+        {% if status_filter %} with status <span class="sdg-target-pill">{{ status_filter }}</span>{% endif %}
+      </div>
+    </div>
+
+    <!-- Reports Grid -->
+    {% if reports %}
+      <div class="reports-grid">
+        {% for rep in reports %}
+          <div class="report-card">
+            <div class="report-card-media">
+              {% if rep.photo_filename %}
+                <img src="{{ url_for('static', filename='uploads/' + rep.photo_filename) }}" alt="{{ rep.title }}">
+              {% else %}
+                <div class="report-card-fallback">
+                  <i class="fa-solid fa-seedling"></i>
+                  <span>{{ rep.category }}</span>
+                </div>
+              {% endif %}
+              <span class="report-category-badge">{{ rep.category }}</span>
+            </div>
+
+            <div class="report-card-body">
+              <div class="report-card-header">
+                <span class="status-badge {{ rep.status.lower().replace(' ', '-') }}">
+                  {% if rep.status == 'Resolved' %}
+                    <i class="fa-solid fa-check"></i>
+                  {% elif rep.status == 'In Progress' %}
+                    <i class="fa-solid fa-wrench"></i>
+                  {% else %}
+                    <i class="fa-solid fa-hourglass-half"></i>
+                  {% endif %}
+                  {{ rep.status }}
+                </span>
+                <span style="font-size:0.8rem;color:#64748b;">
+                  <i class="fa-regular fa-calendar" style="margin-right:4px;"></i>{{ rep.created_at[:10] }}
+                </span>
+              </div>
+
+              <h3 class="report-card-title">{{ rep.title }}</h3>
+              <p class="report-card-desc">{{ rep.description }}</p>
+
+              <div class="report-card-meta">
+                <div class="report-meta-item">
+                  <i class="fa-solid fa-location-dot" style="color:#059669;"></i>
+                  <span>{{ rep.address }}</span>
+                </div>
+                <div class="report-meta-item">
+                  <i class="fa-solid fa-user" style="color:#059669;"></i>
+                  <span>Reported by {{ rep.submitter_name }}</span>
+                </div>
+              </div>
+
+              <div class="report-card-actions">
+                <button onclick="window.openReportModal({{ rep.id }})" class="btn btn-outline-primary btn-sm" style="width:100%;">
+                  <i class="fa-solid fa-circle-info"></i> View Full Details
+                </button>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="background:#ffffff;border-radius:16px;border:1px solid #e2e8f0;padding:4rem 2rem;text-align:center;">
+        <div style="font-size:3rem;color:#cbd5e1;margin-bottom:1rem;">
+          <i class="fa-solid fa-magnifying-glass-location"></i>
+        </div>
+        <h3 style="font-size:1.4rem;margin-bottom:0.5rem;color:#0f172a;">No reports match your filters</h3>
+        <p style="color:#64748b;max-width:440px;margin:0 auto 1.5rem auto;">
+          Try adjusting your search terms or clearing category and status filters.
+        </p>
+        <a href="{{ url_for('view_reports') }}" class="btn btn-primary">
+          <i class="fa-solid fa-rotate-left"></i> Clear All Filters
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

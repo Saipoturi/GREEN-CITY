@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Report an Environmental Issue — GreenCity{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:2.5rem;">
+  <div class="container">
+    <div style="max-width:920px;margin:0 auto;">
+      <!-- Page Header -->
+      <div style="margin-bottom:2rem;text-align:center;">
+        <span class="section-tag"><i class="fa-solid fa-bullhorn" style="margin-right:6px;"></i>Community Civic Action</span>
+        <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:0.75rem;">Report an Environmental Issue</h1>
+        <p style="color:#64748b;font-size:1.05rem;max-width:640px;margin:0 auto;">
+          Help identify environmental degradation, waste accumulation, or water loss in your neighborhood. All reports are routed to city personnel and tracked openly.
+        </p>
+      </div>
+
+      <!-- Main Reporting Form Card -->
+      <div style="background:#ffffff;border-radius:20px;border:1px solid #e2e8f0;box-shadow:var(--shadow-lg);padding:2.5rem;">
+        <form method="POST" action="{{ url_for('report_issue') }}" enctype="multipart/form-data" id="report-form">
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+            <!-- Left Column: Details & Photo -->
+            <div>
+              <h3 style="font-size:1.2rem;margin-bottom:1.25rem;color:#0f172a;display:flex;align-items:center;gap:0.5rem;">
+                <span style="width:28px;height:28px;background:#ecfdf5;color:#059669;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.85rem;">1</span>
+                Issue Details
+              </h3>
+
+              <!-- Report Title -->
+              <div class="form-group">
+                <label for="title" class="form-label">Report Title <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Broken water pipe leaking near Elm Street park" value="{{ form_data.get('title', '') }}" required minlength="5">
+                <small style="color:#94a3b8;font-size:0.8rem;">Provide a concise, specific summary of what you observed.</small>
+              </div>
+
+              <!-- Environmental Category -->
+              <div class="form-group">
+                <label for="category" class="form-label">Environmental Category <span style="color:#ef4444;">*</span></label>
+                <select id="category" name="category" class="form-control" required>
+                  <option value="" disabled {% if not form_data.get('category') %}selected{% endif %}>Select category...</option>
+                  {% for cat in valid_categories %}
+                    <option value="{{ cat }}" {% if form_data.get('category') == cat %}selected{% endif %}>
+                      {{ cat }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Description -->
+              <div class="form-group">
+                <label for="description" class="form-label">Detailed Description <span style="color:#ef4444;">*</span></label>
+                <textarea id="description" name="description" class="form-control" rows="4" placeholder="Describe the severity, duration, nearby landmarks, or any potential environmental or public safety hazards..." required minlength="15">{{ form_data.get('description', '') }}</textarea>
+                <small style="color:#94a3b8;font-size:0.8rem;">Minimum 15 characters. Be as informative as possible.</small>
+              </div>
+
+              <!-- Photo Upload -->
+              <div class="form-group">
+                <label class="form-label">Upload Evidence Photo <span style="color:#64748b;font-weight:normal;">(Recommended)</span></label>
+                <div class="file-dropzone" id="photo-dropzone">
+                  <input type="file" id="photo-input" name="photo" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif">
+                  <div class="dropzone-icon">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <div class="dropzone-text">Click to browse or drag & drop photo here</div>
+                  <div class="dropzone-sub">Supports PNG, JPG, JPEG, WEBP up to 16MB</div>
+                </div>
+
+                <div class="upload-preview" id="upload-preview">
+                  <img id="preview-image" src="" alt="Selected photo preview">
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Location & Interactive Map -->
+            <div>
+              <h3 style="font-size:1.2rem;margin-bottom:1.25rem;color:#0f172a;display:flex;align-items:center;gap:0.5rem;">
+                <span style="width:28px;height:28px;background:#ecfdf5;color:#059669;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.85rem;">2</span>
+                Pinpoint Location
+              </h3>
+
+              <!-- Address / Landmark -->
+              <div class="form-group">
+                <label for="address-input" class="form-label">Address or Landmark <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="address-input" name="address" class="form-control" placeholder="e.g. 742 Elmwood Ave, near Community Center" value="{{ form_data.get('address', '') }}" required>
+                <small style="color:#94a3b8;font-size:0.8rem;">Street name, cross intersection, or park boundary.</small>
+              </div>
+
+              <!-- Interactive Map Picker -->
+              <div class="form-group">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+                  <label class="form-label" style="margin-bottom:0;">Drop Pin on Map</label>
+                  <button type="button" id="locate-me-btn" class="btn btn-secondary btn-sm" style="font-size:0.8rem;padding:0.25rem 0.65rem;">
+                    <i class="fa-solid fa-location-crosshairs"></i> Use My Current Location
+                  </button>
+                </div>
+
+                <div id="picker-map"></div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.5rem;font-size:0.8rem;color:#64748b;">
+                  <span><i class="fa-solid fa-hand-pointer" style="margin-right:4px;"></i> Click or drag marker to adjust</span>
+                  <span id="coord-display" style="font-family:monospace;font-weight:600;color:#059669;">Lat: 40.7128, Lng: -74.0060</span>
+                </div>
+
+                <!-- Hidden coordinate inputs -->
+                <input type="hidden" id="latitude-input" name="latitude" value="{{ form_data.get('latitude', '40.7128') }}">
+                <input type="hidden" id="longitude-input" name="longitude" value="{{ form_data.get('longitude', '-74.0060') }}">
+              </div>
+
+              <!-- Civic Guideline Card -->
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;margin-top:1.5rem;">
+                <h4 style="font-size:0.92rem;font-weight:700;color:#334155;margin-bottom:0.5rem;">
+                  <i class="fa-solid fa-shield-heart" style="color:#059669;margin-right:6px;"></i>Responsible Reporting Checklist
+                </h4>
+                <ul style="font-size:0.85rem;color:#64748b;padding-left:1.25rem;line-height:1.6;">
+                  <li>Verify the location is safe before capturing photos.</li>
+                  <li>Do not photograph private residential interiors or visible faces.</li>
+                  <li>In emergencies (gas leaks, active wildfires), contact 911 immediately.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submission Actions -->
+          <div style="margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:flex-end;gap:1rem;flex-wrap:wrap;">
+            <a href="{{ url_for('view_reports') }}" class="btn btn-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="fa-solid fa-paper-plane"></i> Submit Environmental Report
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
